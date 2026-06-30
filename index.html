@@ -1,244 +1,721 @@
-import React, { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Sparkles, RefreshCw, Trophy, Send, HelpCircle } from "lucide-react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Idiom or Idiot?</title>
 
-const starterIdioms = [
-  { phrase: "Closing the stable door after the horse has bolted", meaning: "Acting too late", real: true },
-  { phrase: "Throwing the baby out with the bathwater", meaning: "Getting rid of something valuable while removing a problem", real: true },
-  { phrase: "Burning the candle at both ends", meaning: "Overworking yourself", real: true },
-  { phrase: "The tail wagging the dog", meaning: "A minor thing controlling a major thing", real: true },
-  { phrase: "Putting all your eggs in one basket", meaning: "Relying on a single option", real: true },
-  { phrase: "Counting your chickens before they hatch", meaning: "Assuming success too early", real: true },
-  { phrase: "Killing two birds with one stone", meaning: "Solving two problems at once", real: true },
-  { phrase: "A bull in a china shop", meaning: "Clumsy and disruptive", real: true },
-  { phrase: "Letting the cat out of the bag", meaning: "Revealing a secret", real: true },
-  { phrase: "Opening a can of worms", meaning: "Creating a complicated problem", real: true },
-  { phrase: "The straw that broke the camel's back", meaning: "The final small thing that causes failure", real: true },
-  { phrase: "A bird in the hand is worth two in the bush", meaning: "Certainty is better than possibility", real: true },
-  { phrase: "You can lead a horse to water, but you can't make it drink", meaning: "You can't force someone to act", real: true },
-  { phrase: "The pot calling the kettle black", meaning: "Criticising someone for your own flaw", real: true },
-  { phrase: "When pigs fly", meaning: "Never", real: true },
-  { phrase: "Don't look a gift horse in the mouth", meaning: "Don't criticise something given freely", real: true },
-  { phrase: "Barking up the wrong tree", meaning: "Pursuing the wrong idea/person", real: true },
-  { phrase: "Rearranging deck chairs on the Titanic", meaning: "Focusing on trivial fixes while disaster approaches", real: true },
-  { phrase: "Carrying coals to Newcastle", meaning: "Bringing something to a place that already has plenty", real: true },
-  { phrase: "Putting lipstick on a pig", meaning: "Making something bad look superficially better", real: true },
-  { phrase: "Polishing the moon with a teacup", meaning: "Trying to improve something already perfect with useless effort", real: false },
-  { phrase: "Feeding the umbrella before the rain", meaning: "Preparing in a way that misses the actual problem", real: false },
-  { phrase: "Counting spoons in a thunderstorm", meaning: "Focusing on tiny details during chaos", real: false },
-  { phrase: "Painting the ladder after climbing it", meaning: "Making improvements after they are no longer useful", real: false },
-  { phrase: "Putting a hat on the hurricane", meaning: "Trying to control something uncontrollable with a symbolic gesture", real: false },
-  { phrase: "Teaching a kettle to whistle", meaning: "Explaining something obvious to someone who already knows", real: false },
-  { phrase: "Hiding the elephant in the teacup", meaning: "Trying to conceal something far too obvious", real: false },
-  { phrase: "Selling snow to the chimney sweep", meaning: "Offering something useless to the wrong person", real: false },
-  { phrase: "Chasing the clock with wet shoes", meaning: "Making yourself slower while trying to hurry", real: false },
-  { phrase: "Putting socks on a snake", meaning: "Adding features that make no practical sense", real: false }
-];
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-function shuffle(array) {
-  const copy = [...array];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #fff7ed, #fffbeb, #eff6ff);
+      color: #0f172a;
+      min-height: 100vh;
+      padding: 24px;
+    }
 
-export default function IdiomQuizApp() {
-  const [pool, setPool] = useState(starterIdioms);
-  const [quizSeed, setQuizSeed] = useState(0);
-  const [current, setCurrent] = useState(0);
-  const [answers, setAnswers] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [submittedIdioms, setSubmittedIdioms] = useState([]);
-  const [form, setForm] = useState({ phrase: "", meaning: "", real: true });
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      gap: 24px;
+    }
 
-  const questions = useMemo(() => shuffle(pool).slice(0, 5), [pool, quizSeed]);
-  const finished = answers.length === questions.length;
-  const score = answers.filter(Boolean).length;
-  const percent = Math.round((score / questions.length) * 100);
-  const passed = finished && percent >= 80;
-  const q = questions[current];
+    @media (max-width: 850px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
 
-  const choose = (choice) => {
-    if (selected !== null || finished) return;
-    setSelected(choice);
-    const correct = choice === q.real;
-    setTimeout(() => {
-      setAnswers((prev) => [...prev, correct]);
-      setSelected(null);
-      setCurrent((prev) => Math.min(prev + 1, questions.length - 1));
-    }, 850);
-  };
+    .card {
+      background: rgba(255, 255, 255, 0.88);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+      backdrop-filter: blur(8px);
+    }
 
-  const reset = () => {
-    setQuizSeed((s) => s + 1);
-    setCurrent(0);
-    setAnswers([]);
-    setSelected(null);
-  };
+    .dark-card {
+      background: #020617;
+      color: white;
+    }
 
-  const submitIdiom = (e) => {
-    e.preventDefault();
-    const cleanPhrase = form.phrase.trim();
-    const cleanMeaning = form.meaning.trim();
-    if (!cleanPhrase || !cleanMeaning) return;
-    const newIdiom = { phrase: cleanPhrase, meaning: cleanMeaning, real: form.real, userSubmitted: true };
-    setSubmittedIdioms((prev) => [newIdiom, ...prev]);
-    setPool((prev) => [newIdiom, ...prev]);
-    setForm({ phrase: "", meaning: "", real: true });
-  };
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-sky-50 p-4 text-slate-900 sm:p-6">
-      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45 }}>
-          <Card className="overflow-hidden rounded-3xl border-0 bg-white/85 shadow-xl backdrop-blur">
-            <CardContent className="p-6 sm:p-8">
-              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="mb-2 flex items-center gap-2">
-                    <Badge className="rounded-full bg-orange-500 px-3 py-1 text-white hover:bg-orange-500">
-                      <Sparkles className="mr-1 h-3.5 w-3.5" /> 5-question mini quiz
-                    </Badge>
-                    <Badge variant="secondary" className="rounded-full">Real or suspiciously fake?</Badge>
-                  </div>
-                  <h1 className="text-3xl font-black tracking-tight sm:text-5xl">Idiom or Idiot?</h1>
-                  <p className="mt-2 max-w-2xl text-base text-slate-600">
-                    Guess whether each phrase is a genuine English idiom or a handcrafted impostor with strong pub-quiz energy.
-                  </p>
-                </div>
-                <Button onClick={reset} variant="outline" className="rounded-2xl">
-                  <RefreshCw className="mr-2 h-4 w-4" /> New quiz
-                </Button>
-              </div>
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      background: #e2e8f0;
+      color: #334155;
+    }
 
-              <div className="mb-5 grid grid-cols-5 gap-2">
-                {questions.map((_, i) => (
-                  <div key={i} className={`h-2 rounded-full ${i < answers.length ? (answers[i] ? "bg-emerald-500" : "bg-rose-500") : i === current && !finished ? "bg-orange-400" : "bg-slate-200"}`} />
-                ))}
-              </div>
+    .badge.orange {
+      background: #f97316;
+      color: white;
+    }
 
-              <AnimatePresence mode="wait">
-                {!finished ? (
-                  <motion.div key={current} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.25 }}>
-                    <div className="rounded-3xl bg-slate-950 p-6 text-white shadow-inner sm:p-8">
-                      <div className="mb-4 flex items-center justify-between gap-3">
-                        <span className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-300">Question {current + 1} of 5</span>
-                        <span className="rounded-full bg-white/10 px-3 py-1 text-sm text-slate-200">Score: {score}/{answers.length || 0}</span>
-                      </div>
-                      <h2 className="text-3xl font-black leading-tight sm:text-5xl">“{q.phrase}”</h2>
-                      <div className="mt-5 rounded-2xl bg-white/10 p-4">
-                        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-300">
-                          <HelpCircle className="h-4 w-4" /> Alleged meaning
-                        </div>
-                        <p className="text-lg text-white">{q.meaning}</p>
-                      </div>
-                    </div>
+    .badge.green {
+      background: #10b981;
+      color: white;
+    }
 
-                    <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                      <Button onClick={() => choose(true)} disabled={selected !== null} className={`h-16 rounded-2xl text-lg font-bold ${selected === true ? (q.real ? "bg-emerald-600" : "bg-rose-600") : "bg-emerald-500 hover:bg-emerald-600"}`}>
-                        {selected === true ? (q.real ? <CheckCircle2 className="mr-2" /> : <XCircle className="mr-2" />) : null}
-                        Real idiom
-                      </Button>
-                      <Button onClick={() => choose(false)} disabled={selected !== null} className={`h-16 rounded-2xl text-lg font-bold ${selected === false ? (!q.real ? "bg-emerald-600" : "bg-rose-600") : "bg-rose-500 hover:bg-rose-600"}`}>
-                        {selected === false ? (!q.real ? <CheckCircle2 className="mr-2" /> : <XCircle className="mr-2" />) : null}
-                        Fake nonsense
-                      </Button>
-                    </div>
+    .badge.red {
+      background: #ef4444;
+      color: white;
+    }
 
-                    {selected !== null && (
-                      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-2xl border bg-white p-4 text-center font-semibold shadow-sm">
-                        {selected === q.real ? "Correct. The council of confusing English approves." : `Nope — this one is ${q.real ? "real" : "fake"}. English remains unreasonable.`}
-                      </motion.div>
-                    )}
-                  </motion.div>
-                ) : (
-                  <motion.div key="results" initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="rounded-3xl bg-white p-6 shadow-sm sm:p-8">
-                    <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <div className="mb-2 flex items-center gap-2 text-orange-500">
-                          <Trophy className="h-7 w-7" />
-                          <span className="font-bold uppercase tracking-[0.18em]">Results</span>
-                        </div>
-                        <h2 className="text-4xl font-black">{score}/5 — {percent}%</h2>
-                        <p className="mt-2 text-slate-600">
-                          {passed ? "You have earned the sacred right to submit an idiom. Use this power irresponsibly, but clearly." : "Close, but no idiom submission yet. Retake the quiz and gaslight the English language harder."}
-                        </p>
-                      </div>
-                      <Button onClick={reset} className="rounded-2xl bg-slate-950 hover:bg-slate-800">
-                        <RefreshCw className="mr-2 h-4 w-4" /> Try again
-                      </Button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-        </motion.div>
+    h1 {
+      font-size: clamp(38px, 6vw, 64px);
+      line-height: 0.95;
+      margin: 0;
+      letter-spacing: -0.05em;
+    }
 
-        <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }} className="space-y-6">
-          <Card className="rounded-3xl border-0 bg-white/85 shadow-xl backdrop-blur">
-            <CardContent className="p-6">
-              <h3 className="text-2xl font-black">Submit an idiom</h3>
-              <p className="mt-1 text-sm text-slate-600">Unlocked only if you score 80% or higher.</p>
+    h2 {
+      font-size: clamp(30px, 5vw, 54px);
+      line-height: 1.05;
+      margin: 0;
+      letter-spacing: -0.04em;
+    }
 
-              <form onSubmit={submitIdiom} className={`mt-5 space-y-4 ${!passed ? "pointer-events-none opacity-40" : ""}`}>
-                <div>
-                  <label className="mb-1 block text-sm font-semibold">Phrase</label>
-                  <Input value={form.phrase} onChange={(e) => setForm({ ...form, phrase: e.target.value })} placeholder="e.g. Buttering the ladder sideways" className="rounded-2xl" />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-semibold">Meaning</label>
-                  <Textarea value={form.meaning} onChange={(e) => setForm({ ...form, meaning: e.target.value })} placeholder="What does it allegedly mean?" className="min-h-24 rounded-2xl" />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button type="button" onClick={() => setForm({ ...form, real: true })} variant={form.real ? "default" : "outline"} className="rounded-2xl">Real</Button>
-                  <Button type="button" onClick={() => setForm({ ...form, real: false })} variant={!form.real ? "default" : "outline"} className="rounded-2xl">Fake</Button>
-                </div>
-                <Button type="submit" className="w-full rounded-2xl bg-orange-500 hover:bg-orange-600">
-                  <Send className="mr-2 h-4 w-4" /> Add to quiz pool
-                </Button>
-              </form>
+    h3 {
+      font-size: 26px;
+      margin: 0 0 6px;
+    }
 
-              {!passed && (
-                <div className="mt-4 rounded-2xl bg-slate-100 p-4 text-sm text-slate-600">
-                  Score at least <strong>4/5</strong> to unlock this form.
-                </div>
-              )}
-            </CardContent>
-          </Card>
+    p {
+      line-height: 1.5;
+    }
 
-          <Card className="rounded-3xl border-0 bg-slate-950 text-white shadow-xl">
-            <CardContent className="p-6">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="text-xl font-black">Recently submitted</h3>
-                <Badge className="rounded-full bg-white/10 text-white hover:bg-white/10">{submittedIdioms.length}</Badge>
-              </div>
-              <div className="space-y-3">
-                {submittedIdioms.length === 0 ? (
-                  <p className="text-sm text-slate-300">No submissions yet. The fake proverb factory awaits.</p>
-                ) : (
-                  submittedIdioms.slice(0, 5).map((item, idx) => (
-                    <div key={`${item.phrase}-${idx}`} className="rounded-2xl bg-white/10 p-4">
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <p className="font-bold">“{item.phrase}”</p>
-                        <Badge className={item.real ? "bg-emerald-500 hover:bg-emerald-500" : "bg-rose-500 hover:bg-rose-500"}>{item.real ? "Real" : "Fake"}</Badge>
-                      </div>
-                      <p className="text-sm text-slate-300">{item.meaning}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+    .subtitle {
+      color: #475569;
+      max-width: 700px;
+      font-size: 17px;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      transform: none;
+    }
+
+    .btn-outline {
+      border: 1px solid #cbd5e1;
+      background: white;
+      color: #0f172a;
+    }
+
+    .btn-dark {
+      background: #020617;
+      color: white;
+    }
+
+    .btn-green {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-red {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-orange {
+      background: #f97316;
+      color: white;
+      width: 100%;
+    }
+
+    .progress {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+
+    .progress div {
+      height: 9px;
+      border-radius: 999px;
+      background: #e2e8f0;
+    }
+
+    .progress .active {
+      background: #fb923c;
+    }
+
+    .progress .correct {
+      background: #10b981;
+    }
+
+    .progress .wrong {
+      background: #ef4444;
+    }
+
+    .question-box {
+      background: #020617;
+      color: white;
+      border-radius: 28px;
+      padding: 30px;
+      min-height: 310px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: #fdba74;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .score-pill {
+      background: rgba(255,255,255,0.1);
+      color: #e2e8f0;
+      padding: 7px 11px;
+      border-radius: 999px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .meaning {
+      margin-top: 24px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .meaning-label {
+      font-size: 14px;
+      color: #cbd5e1;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .answer-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .answer-buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .answer-buttons button {
+      min-height: 66px;
+      font-size: 19px;
+    }
+
+    .feedback {
+      margin-top: 16px;
+      background: white;
+      border-radius: 18px;
+      padding: 16px;
+      text-align: center;
+      font-weight: 800;
+      border: 1px solid #e2e8f0;
+    }
+
+    .results {
+      background: white;
+      border-radius: 26px;
+      padding: 28px;
+      display: none;
+    }
+
+    .results-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .form-disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 13px 14px;
+      font: inherit;
+      margin-bottom: 14px;
+      background: white;
+    }
+
+    textarea {
+      min-height: 95px;
+      resize: vertical;
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .toggle-row button {
+      background: white;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+    }
+
+    .toggle-row button.selected {
+      background: #020617;
+      color: white;
+      border-color: #020617;
+    }
+
+    .locked-message {
+      background: #f1f5f9;
+      color: #475569;
+      border-radius: 18px;
+      padding: 15px;
+      font-size: 14px;
+      margin-top: 14px;
+    }
+
+    .submitted-list {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .submitted-item {
+      background: rgba(255,255,255,0.1);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .submitted-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 6px;
+      font-weight: 800;
+    }
+
+    .submitted-item p {
+      color: #cbd5e1;
+      font-size: 14px;
+      margin: 0;
+    }
+
+    .small-note {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <section class="card">
+      <div class="top-row">
+        <div>
+          <div class="badges">
+            <span class="badge orange">✨ 5-question mini quiz</span>
+            <span class="badge">Real or suspiciously fake?</span>
+          </div>
+
+          <h1>Idiom or Idiot?</h1>
+
+          <p class="subtitle">
+            Guess whether each phrase is a genuine English idiom or a handcrafted impostor with strong pub-quiz energy.
+          </p>
+        </div>
+
+        <button class="btn-outline" onclick="startNewQuiz()">↻ New quiz</button>
       </div>
-    </div>
-  );
-}
+
+      <div class="progress" id="progress"></div>
+
+      <div id="quizArea">
+        <div class="question-box">
+          <div>
+            <div class="question-meta">
+              <span id="questionNumber">Question 1 of 5</span>
+              <span class="score-pill" id="miniScore">Score: 0/0</span>
+            </div>
+
+            <h2 id="phrase">Loading...</h2>
+          </div>
+
+          <div class="meaning">
+            <div class="meaning-label">Alleged meaning</div>
+            <div id="meaning">Loading...</div>
+          </div>
+        </div>
+
+        <div class="answer-buttons">
+          <button class="btn-green" id="realBtn" onclick="chooseAnswer(true)">Real idiom</button>
+          <button class="btn-red" id="fakeBtn" onclick="chooseAnswer(false)">Fake nonsense</button>
+        </div>
+
+        <div class="feedback hidden" id="feedback"></div>
+      </div>
+
+      <div class="results" id="resultsArea">
+        <div class="results-row">
+          <div>
+            <div class="badge orange">🏆 Results</div>
+            <h2 id="finalScore" style="margin-top: 12px;">0/5 — 0%</h2>
+            <p id="resultsMessage" class="subtitle"></p>
+          </div>
+
+          <button class="btn-dark" onclick="startNewQuiz()">↻ Try again</button>
+        </div>
+      </div>
+    </section>
+
+    <aside>
+      <section class="card">
+        <h3>Submit an idiom</h3>
+        <p class="small-note">Unlocked only if you score 80% or higher.</p>
+
+        <form id="submitForm" class="form-disabled" onsubmit="submitIdiom(event)">
+          <label for="newPhrase">Phrase</label>
+          <input id="newPhrase" placeholder="e.g. Buttering the ladder sideways" />
+
+          <label for="newMeaning">Meaning</label>
+          <textarea id="newMeaning" placeholder="What does it allegedly mean?"></textarea>
+
+          <div class="toggle-row">
+            <button type="button" id="markReal" class="selected" onclick="setSubmissionType(true)">Real</button>
+            <button type="button" id="markFake" onclick="setSubmissionType(false)">Fake</button>
+          </div>
+
+          <button class="btn-orange" type="submit">➤ Add to quiz pool</button>
+        </form>
+
+        <div class="locked-message" id="lockedMessage">
+          Score at least <strong>4/5</strong> to unlock this form.
+        </div>
+      </section>
+
+      <section class="card dark-card" style="margin-top: 24px;">
+        <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+          <h3>Recently submitted</h3>
+          <span class="badge" id="submittedCount">0</span>
+        </div>
+
+        <div class="submitted-list" id="submittedList">
+          <p style="color:#cbd5e1;">No submissions yet. The fake proverb factory awaits.</p>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    const starterIdioms = [
+      { phrase: "Closing the stable door after the horse has bolted", meaning: "Acting too late", real: true },
+      { phrase: "Throwing the baby out with the bathwater", meaning: "Getting rid of something valuable while removing a problem", real: true },
+      { phrase: "Burning the candle at both ends", meaning: "Overworking yourself", real: true },
+      { phrase: "The tail wagging the dog", meaning: "A minor thing controlling a major thing", real: true },
+      { phrase: "Putting all your eggs in one basket", meaning: "Relying on a single option", real: true },
+      { phrase: "Counting your chickens before they hatch", meaning: "Assuming success too early", real: true },
+      { phrase: "Killing two birds with one stone", meaning: "Solving two problems at once", real: true },
+      { phrase: "A bull in a china shop", meaning: "Clumsy and disruptive", real: true },
+      { phrase: "Letting the cat out of the bag", meaning: "Revealing a secret", real: true },
+      { phrase: "Opening a can of worms", meaning: "Creating a complicated problem", real: true },
+      { phrase: "The straw that broke the camel's back", meaning: "The final small thing that causes failure", real: true },
+      { phrase: "A bird in the hand is worth two in the bush", meaning: "Certainty is better than possibility", real: true },
+      { phrase: "You can lead a horse to water, but you can't make it drink", meaning: "You can't force someone to act", real: true },
+      { phrase: "The pot calling the kettle black", meaning: "Criticising someone for your own flaw", real: true },
+      { phrase: "When pigs fly", meaning: "Never", real: true },
+      { phrase: "Don't look a gift horse in the mouth", meaning: "Don't criticise something given freely", real: true },
+      { phrase: "Barking up the wrong tree", meaning: "Pursuing the wrong idea/person", real: true },
+      { phrase: "Rearranging deck chairs on the Titanic", meaning: "Focusing on trivial fixes while disaster approaches", real: true },
+      { phrase: "Carrying coals to Newcastle", meaning: "Bringing something to a place that already has plenty", real: true },
+      { phrase: "Putting lipstick on a pig", meaning: "Making something bad look superficially better", real: true },
+
+      { phrase: "Polishing the moon with a teacup", meaning: "Trying to improve something already perfect with useless effort", real: false },
+      { phrase: "Feeding the umbrella before the rain", meaning: "Preparing in a way that misses the actual problem", real: false },
+      { phrase: "Counting spoons in a thunderstorm", meaning: "Focusing on tiny details during chaos", real: false },
+      { phrase: "Painting the ladder after climbing it", meaning: "Making improvements after they are no longer useful", real: false },
+      { phrase: "Putting a hat on the hurricane", meaning: "Trying to control something uncontrollable with a symbolic gesture", real: false },
+      { phrase: "Teaching a kettle to whistle", meaning: "Explaining something obvious to someone who already knows", real: false },
+      { phrase: "Hiding the elephant in the teacup", meaning: "Trying to conceal something far too obvious", real: false },
+      { phrase: "Selling snow to the chimney sweep", meaning: "Offering something useless to the wrong person", real: false },
+      { phrase: "Chasing the clock with wet shoes", meaning: "Making yourself slower while trying to hurry", real: false },
+      { phrase: "Putting socks on a snake", meaning: "Adding features that make no practical sense", real: false }
+    ];
+
+    let submittedIdioms = JSON.parse(localStorage.getItem("submittedIdioms") || "[]");
+    let pool = [...submittedIdioms, ...starterIdioms];
+
+    let questions = [];
+    let currentQuestion = 0;
+    let answers = [];
+    let answerLocked = false;
+    let submissionIsReal = true;
+
+    function shuffle(array) {
+      const copy = [...array];
+
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+
+      return copy;
+    }
+
+    function startNewQuiz() {
+      questions = shuffle(pool).slice(0, 5);
+      currentQuestion = 0;
+      answers = [];
+      answerLocked = false;
+
+      document.getElementById("quizArea").style.display = "block";
+      document.getElementById("resultsArea").style.display = "none";
+      document.getElementById("feedback").classList.add("hidden");
+
+      lockSubmissionForm();
+
+      renderQuestion();
+    }
+
+    function renderProgress() {
+      const progress = document.getElementById("progress");
+      progress.innerHTML = "";
+
+      for (let i = 0; i < 5; i++) {
+        const bar = document.createElement("div");
+
+        if (i < answers.length) {
+          bar.className = answers[i] ? "correct" : "wrong";
+        } else if (i === currentQuestion) {
+          bar.className = "active";
+        }
+
+        progress.appendChild(bar);
+      }
+    }
+
+    function renderQuestion() {
+      const q = questions[currentQuestion];
+
+      renderProgress();
+
+      document.getElementById("questionNumber").textContent = `Question ${currentQuestion + 1} of 5`;
+      document.getElementById("miniScore").textContent = `Score: ${answers.filter(Boolean).length}/${answers.length}`;
+      document.getElementById("phrase").textContent = `“${q.phrase}”`;
+      document.getElementById("meaning").textContent = q.meaning;
+
+      document.getElementById("realBtn").disabled = false;
+      document.getElementById("fakeBtn").disabled = false;
+      document.getElementById("feedback").classList.add("hidden");
+    }
+
+    function chooseAnswer(choice) {
+      if (answerLocked) return;
+
+      answerLocked = true;
+
+      const q = questions[currentQuestion];
+      const correct = choice === q.real;
+
+      answers.push(correct);
+
+      const feedback = document.getElementById("feedback");
+      feedback.classList.remove("hidden");
+
+      if (correct) {
+        feedback.textContent = "Correct. The council of confusing English approves.";
+      } else {
+        feedback.textContent = `Nope — this one is ${q.real ? "real" : "fake"}. English remains unreasonable.`;
+      }
+
+      document.getElementById("realBtn").disabled = true;
+      document.getElementById("fakeBtn").disabled = true;
+
+      renderProgress();
+
+      setTimeout(() => {
+        currentQuestion++;
+
+        if (currentQuestion >= questions.length) {
+          showResults();
+        } else {
+          answerLocked = false;
+          renderQuestion();
+        }
+      }, 1000);
+    }
+
+    function showResults() {
+      const score = answers.filter(Boolean).length;
+      const percent = Math.round((score / questions.length) * 100);
+      const passed = percent >= 80;
+
+      document.getElementById("quizArea").style.display = "none";
+      document.getElementById("resultsArea").style.display = "block";
+      document.getElementById("finalScore").textContent = `${score}/5 — ${percent}%`;
+
+      if (passed) {
+        document.getElementById("resultsMessage").textContent =
+          "You have earned the sacred right to submit an idiom. Use this power irresponsibly, but clearly.";
+        unlockSubmissionForm();
+      } else {
+        document.getElementById("resultsMessage").textContent =
+          "Close, but no idiom submission yet. Retake the quiz and gaslight the English language harder.";
+        lockSubmissionForm();
+      }
+    }
+
+    function unlockSubmissionForm() {
+      document.getElementById("submitForm").classList.remove("form-disabled");
+      document.getElementById("lockedMessage").style.display = "none";
+    }
+
+    function lockSubmissionForm() {
+      document.getElementById("submitForm").classList.add("form-disabled");
+      document.getElementById("lockedMessage").style.display = "block";
+    }
+
+    function setSubmissionType(isReal) {
+      submissionIsReal = isReal;
+
+      document.getElementById("markReal").classList.toggle("selected", isReal);
+      document.getElementById("markFake").classList.toggle("selected", !isReal);
+    }
+
+    function submitIdiom(event) {
+      event.preventDefault();
+
+      const phraseInput = document.getElementById("newPhrase");
+      const meaningInput = document.getElementById("newMeaning");
+
+      const phrase = phraseInput.value.trim();
+      const meaning = meaningInput.value.trim();
+
+      if (!phrase || !meaning) return;
+
+      const newIdiom = {
+        phrase,
+        meaning,
+        real: submissionIsReal,
+        userSubmitted: true
+      };
+
+      submittedIdioms.unshift(newIdiom);
+      pool.unshift(newIdiom);
+
+      localStorage.setItem("submittedIdioms", JSON.stringify(submittedIdioms));
+
+      phraseInput.value = "";
+      meaningInput.value = "";
+      setSubmissionType(true);
+
+      renderSubmitted();
+      alert("Idiom added to your local quiz pool. The English language has been notified.");
+    }
+
+    function renderSubmitted() {
+      const list = document.getElementById("submittedList");
+      const count = document.getElementById("submittedCount");
+
+      count.textContent = submittedIdioms.length;
+      list.innerHTML = "";
+
+      if (submittedIdioms.length === 0) {
+        list.innerHTML = `<p style="color:#cbd5e1;">No submissions yet. The fake proverb factory awaits.</p>`;
+        return;
+      }
+
+      submittedIdioms.slice(0, 5).forEach(item => {
+        const div = document.createElement("div");
+        div.className = "submitted-item";
+
+        div.innerHTML = `
+          <div class="submitted-title">
+            <span>“${escapeHtml(item.phrase)}”</span>
+            <span class="badge ${item.real ? "green" : "red"}">${item.real ? "Real" : "Fake"}</span>
+          </div>
+          <p>${escapeHtml(item.meaning)}</p>
+        `;
+
+        list.appendChild(div);
+      });
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    renderSubmitted();
+    startNewQuiz();
+  </script>
+</body>
+</html>
