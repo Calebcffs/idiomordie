@@ -474,16 +474,6 @@
         </div>
       </section>
 
-      <section class="card dark-card" style="margin-top: 24px;">
-        <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
-          <h3>Recently submitted</h3>
-          <span class="badge" id="submittedCount">0</span>
-        </div>
-
-        <div class="submitted-list" id="submittedList">
-          <p style="color:#cbd5e1;">Loading global submissions...</p>
-        </div>
-      </section>
     </aside>
   </main>
 
@@ -727,32 +717,38 @@
         firebaseStatus.textContent =
           `Global database loaded: ${submittedIdioms.length} submitted idiom${submittedIdioms.length === 1 ? "" : "s"}.`;
 
-        renderSubmitted();
-        startNewQuiz();
-      } catch (error) {
-        console.error("Firebase loading error:", error);
-
-        firebaseStatus.innerHTML =
-          '<span class="error">Could not connect to Firebase. Check your config and Firestore rules.</span>';
-
-        submittedIdioms = [];
-        pool = [...starterIdioms];
-
-        renderSubmitted();
-        startNewQuiz();
-      }
-    }
 
     function startNewQuiz() {
-      questions = shuffle(pool).slice(0, 5);
+    
+      const recent = shuffle(submittedIdioms);
+      const classics = shuffle(starterIdioms);
+    
+      const guaranteedRecent =
+        recent.slice(0, Math.min(2, recent.length));
+    
+      const remainingNeeded =
+        5 - guaranteedRecent.length;
+    
+      const remainingPool = shuffle([
+        ...recent.slice(guaranteedRecent.length),
+        ...classics
+      ]);
+    
+      questions = [
+        ...guaranteedRecent,
+        ...remainingPool.slice(0, remainingNeeded)
+      ];
+    
+      questions = shuffle(questions);
+    
       currentQuestion = 0;
       answers = [];
       answerLocked = false;
-
+    
       document.getElementById("quizArea").style.display = "block";
       document.getElementById("resultsArea").style.display = "none";
       document.getElementById("feedback").classList.add("hidden");
-
+    
       lockSubmissionForm();
       renderQuestion();
     }
@@ -900,10 +896,6 @@
         alert("Could not submit idiom. Check your Firebase config and Firestore rules.");
       }
     }
-
-    function renderSubmitted() {
-      const list = document.getElementById("submittedList");
-      const count = document.getElementById("submittedCount");
 
       count.textContent = submittedIdioms.length;
       list.innerHTML = "";
