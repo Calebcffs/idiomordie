@@ -215,7 +215,7 @@
     }
 
     .score-pill {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       color: #e2e8f0;
       padding: 7px 11px;
       border-radius: 999px;
@@ -225,7 +225,7 @@
 
     .meaning {
       margin-top: 24px;
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 20px;
       padding: 18px;
     }
@@ -343,7 +343,7 @@
     }
 
     .submitted-item {
-      background: rgba(255,255,255,0.1);
+      background: rgba(255, 255, 255, 0.1);
       border-radius: 18px;
       padding: 16px;
     }
@@ -401,7 +401,9 @@
             Guess whether each phrase is a genuine English idiom or a handcrafted impostor with strong pub-quiz energy.
           </p>
 
-          <div class="status" id="firebaseStatus">Connecting to global idiom database...</div>
+          <div class="status" id="firebaseStatus">
+            Connecting to global idiom database...
+          </div>
         </div>
 
         <button class="btn-outline" id="newQuizBtn">↻ New quiz</button>
@@ -508,41 +510,161 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+    getAnalytics(app);
     const db = getFirestore(app);
 
     const starterIdioms = [
-      { phrase: "Closing the stable door after the horse has bolted", meaning: "Acting too late", real: true },
-      { phrase: "Throwing the baby out with the bathwater", meaning: "Getting rid of something valuable while removing a problem", real: true },
-      { phrase: "Burning the candle at both ends", meaning: "Overworking yourself", real: true },
-      { phrase: "The tail wagging the dog", meaning: "A minor thing controlling a major thing", real: true },
-      { phrase: "Putting all your eggs in one basket", meaning: "Relying on a single option", real: true },
-      { phrase: "Counting your chickens before they hatch", meaning: "Assuming success too early", real: true },
-      { phrase: "Killing two birds with one stone", meaning: "Solving two problems at once", real: true },
-      { phrase: "A bull in a china shop", meaning: "Clumsy and disruptive", real: true },
-      { phrase: "Letting the cat out of the bag", meaning: "Revealing a secret", real: true },
-      { phrase: "Opening a can of worms", meaning: "Creating a complicated problem", real: true },
-      { phrase: "The straw that broke the camel's back", meaning: "The final small thing that causes failure", real: true },
-      { phrase: "A bird in the hand is worth two in the bush", meaning: "Certainty is better than possibility", real: true },
-      { phrase: "You can lead a horse to water, but you can't make it drink", meaning: "You can't force someone to act", real: true },
-      { phrase: "The pot calling the kettle black", meaning: "Criticising someone for your own flaw", real: true },
-      { phrase: "When pigs fly", meaning: "Never", real: true },
-      { phrase: "Don't look a gift horse in the mouth", meaning: "Don't criticise something given freely", real: true },
-      { phrase: "Barking up the wrong tree", meaning: "Pursuing the wrong idea/person", real: true },
-      { phrase: "Rearranging deck chairs on the Titanic", meaning: "Focusing on trivial fixes while disaster approaches", real: true },
-      { phrase: "Carrying coals to Newcastle", meaning: "Bringing something to a place that already has plenty", real: true },
-      { phrase: "Putting lipstick on a pig", meaning: "Making something bad look superficially better", real: true },
+      {
+        phrase: "Closing the stable door after the horse has bolted",
+        meaning: "Acting too late",
+        real: true
+      },
+      {
+        phrase: "Throwing the baby out with the bathwater",
+        meaning: "Getting rid of something valuable while removing a problem",
+        real: true
+      },
+      {
+        phrase: "Burning the candle at both ends",
+        meaning: "Overworking yourself",
+        real: true
+      },
+      {
+        phrase: "The tail wagging the dog",
+        meaning: "A minor thing controlling a major thing",
+        real: true
+      },
+      {
+        phrase: "Putting all your eggs in one basket",
+        meaning: "Relying on a single option",
+        real: true
+      },
+      {
+        phrase: "Counting your chickens before they hatch",
+        meaning: "Assuming success too early",
+        real: true
+      },
+      {
+        phrase: "Killing two birds with one stone",
+        meaning: "Solving two problems at once",
+        real: true
+      },
+      {
+        phrase: "A bull in a china shop",
+        meaning: "Clumsy and disruptive",
+        real: true
+      },
+      {
+        phrase: "Letting the cat out of the bag",
+        meaning: "Revealing a secret",
+        real: true
+      },
+      {
+        phrase: "Opening a can of worms",
+        meaning: "Creating a complicated problem",
+        real: true
+      },
+      {
+        phrase: "The straw that broke the camel's back",
+        meaning: "The final small thing that causes failure",
+        real: true
+      },
+      {
+        phrase: "A bird in the hand is worth two in the bush",
+        meaning: "Certainty is better than possibility",
+        real: true
+      },
+      {
+        phrase: "You can lead a horse to water, but you can't make it drink",
+        meaning: "You can't force someone to act",
+        real: true
+      },
+      {
+        phrase: "The pot calling the kettle black",
+        meaning: "Criticising someone for your own flaw",
+        real: true
+      },
+      {
+        phrase: "When pigs fly",
+        meaning: "Never",
+        real: true
+      },
+      {
+        phrase: "Don't look a gift horse in the mouth",
+        meaning: "Don't criticise something given freely",
+        real: true
+      },
+      {
+        phrase: "Barking up the wrong tree",
+        meaning: "Pursuing the wrong idea/person",
+        real: true
+      },
+      {
+        phrase: "Rearranging deck chairs on the Titanic",
+        meaning: "Focusing on trivial fixes while disaster approaches",
+        real: true
+      },
+      {
+        phrase: "Carrying coals to Newcastle",
+        meaning: "Bringing something to a place that already has plenty",
+        real: true
+      },
+      {
+        phrase: "Putting lipstick on a pig",
+        meaning: "Making something bad look superficially better",
+        real: true
+      },
 
-      { phrase: "Polishing the moon with a teacup", meaning: "Trying to improve something already perfect with useless effort", real: false },
-      { phrase: "Feeding the umbrella before the rain", meaning: "Preparing in a way that misses the actual problem", real: false },
-      { phrase: "Counting spoons in a thunderstorm", meaning: "Focusing on tiny details during chaos", real: false },
-      { phrase: "Painting the ladder after climbing it", meaning: "Making improvements after they are no longer useful", real: false },
-      { phrase: "Putting a hat on the hurricane", meaning: "Trying to control something uncontrollable with a symbolic gesture", real: false },
-      { phrase: "Teaching a kettle to whistle", meaning: "Explaining something obvious to someone who already knows", real: false },
-      { phrase: "Hiding the elephant in the teacup", meaning: "Trying to conceal something far too obvious", real: false },
-      { phrase: "Selling snow to the chimney sweep", meaning: "Offering something useless to the wrong person", real: false },
-      { phrase: "Chasing the clock with wet shoes", meaning: "Making yourself slower while trying to hurry", real: false },
-      { phrase: "Putting socks on a snake", meaning: "Adding features that make no practical sense", real: false }
+      {
+        phrase: "Polishing the moon with a teacup",
+        meaning: "Trying to improve something already perfect with useless effort",
+        real: false
+      },
+      {
+        phrase: "Feeding the umbrella before the rain",
+        meaning: "Preparing in a way that misses the actual problem",
+        real: false
+      },
+      {
+        phrase: "Counting spoons in a thunderstorm",
+        meaning: "Focusing on tiny details during chaos",
+        real: false
+      },
+      {
+        phrase: "Painting the ladder after climbing it",
+        meaning: "Making improvements after they are no longer useful",
+        real: false
+      },
+      {
+        phrase: "Putting a hat on the hurricane",
+        meaning: "Trying to control something uncontrollable with a symbolic gesture",
+        real: false
+      },
+      {
+        phrase: "Teaching a kettle to whistle",
+        meaning: "Explaining something obvious to someone who already knows",
+        real: false
+      },
+      {
+        phrase: "Hiding the elephant in the teacup",
+        meaning: "Trying to conceal something far too obvious",
+        real: false
+      },
+      {
+        phrase: "Selling snow to the chimney sweep",
+        meaning: "Offering something useless to the wrong person",
+        real: false
+      },
+      {
+        phrase: "Chasing the clock with wet shoes",
+        meaning: "Making yourself slower while trying to hurry",
+        real: false
+      },
+      {
+        phrase: "Putting socks on a snake",
+        meaning: "Adding features that make no practical sense",
+        real: false
+      }
     ];
 
     let submittedIdioms = [];
