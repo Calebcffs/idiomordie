@@ -34,7 +34,7 @@
     }
 
     .card {
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.92);
       border-radius: 28px;
       padding: 28px;
       box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
@@ -62,6 +62,7 @@
       font-weight: 700;
       background: #e2e8f0;
       color: #334155;
+      white-space: nowrap;
     }
 
     .badge.orange {
@@ -370,6 +371,17 @@
     .hidden {
       display: none;
     }
+
+    .status {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .error {
+      color: #dc2626;
+      font-weight: 700;
+    }
   </style>
 </head>
 
@@ -388,9 +400,11 @@
           <p class="subtitle">
             Guess whether each phrase is a genuine English idiom or a handcrafted impostor with strong pub-quiz energy.
           </p>
+
+          <div class="status" id="firebaseStatus">Connecting to global idiom database...</div>
         </div>
 
-        <button class="btn-outline" onclick="startNewQuiz()">↻ New quiz</button>
+        <button class="btn-outline" id="newQuizBtn">↻ New quiz</button>
       </div>
 
       <div class="progress" id="progress"></div>
@@ -413,8 +427,8 @@
         </div>
 
         <div class="answer-buttons">
-          <button class="btn-green" id="realBtn" onclick="chooseAnswer(true)">Real idiom</button>
-          <button class="btn-red" id="fakeBtn" onclick="chooseAnswer(false)">Fake nonsense</button>
+          <button class="btn-green" id="realBtn">Real idiom</button>
+          <button class="btn-red" id="fakeBtn">Fake nonsense</button>
         </div>
 
         <div class="feedback hidden" id="feedback"></div>
@@ -428,7 +442,7 @@
             <p id="resultsMessage" class="subtitle"></p>
           </div>
 
-          <button class="btn-dark" onclick="startNewQuiz()">↻ Try again</button>
+          <button class="btn-dark" id="tryAgainBtn">↻ Try again</button>
         </div>
       </div>
     </section>
@@ -438,7 +452,7 @@
         <h3>Submit an idiom</h3>
         <p class="small-note">Unlocked only if you score 80% or higher.</p>
 
-        <form id="submitForm" class="form-disabled" onsubmit="submitIdiom(event)">
+        <form id="submitForm" class="form-disabled">
           <label for="newPhrase">Phrase</label>
           <input id="newPhrase" placeholder="e.g. Buttering the ladder sideways" />
 
@@ -446,11 +460,11 @@
           <textarea id="newMeaning" placeholder="What does it allegedly mean?"></textarea>
 
           <div class="toggle-row">
-            <button type="button" id="markReal" class="selected" onclick="setSubmissionType(true)">Real</button>
-            <button type="button" id="markFake" onclick="setSubmissionType(false)">Fake</button>
+            <button type="button" id="markReal" class="selected">Real</button>
+            <button type="button" id="markFake">Fake</button>
           </div>
 
-          <button class="btn-orange" type="submit">➤ Add to quiz pool</button>
+          <button class="btn-orange" type="submit">➤ Add to global quiz pool</button>
         </form>
 
         <div class="locked-message" id="lockedMessage">
@@ -465,13 +479,38 @@
         </div>
 
         <div class="submitted-list" id="submittedList">
-          <p style="color:#cbd5e1;">No submissions yet. The fake proverb factory awaits.</p>
+          <p style="color:#cbd5e1;">Loading global submissions...</p>
         </div>
       </section>
     </aside>
   </main>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-analytics.js";
+
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDjHdVBFIsh3H4lrJZCxTbxLN9Hq2pd7Gw",
+      authDomain: "idiom-idi.firebaseapp.com",
+      projectId: "idiom-idi",
+      storageBucket: "idiom-idi.firebasestorage.app",
+      messagingSenderId: "913326288726",
+      appId: "1:913326288726:web:4d520a15f98b39d9a070f7",
+      measurementId: "G-98ENLTV583"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
     const starterIdioms = [
       { phrase: "Closing the stable door after the horse has bolted", meaning: "Acting too late", real: true },
       { phrase: "Throwing the baby out with the bathwater", meaning: "Getting rid of something valuable while removing a problem", real: true },
@@ -506,14 +545,24 @@
       { phrase: "Putting socks on a snake", meaning: "Adding features that make no practical sense", real: false }
     ];
 
-    let submittedIdioms = JSON.parse(localStorage.getItem("submittedIdioms") || "[]");
-    let pool = [...submittedIdioms, ...starterIdioms];
+    let submittedIdioms = [];
+    let pool = [...starterIdioms];
 
     let questions = [];
     let currentQuestion = 0;
     let answers = [];
     let answerLocked = false;
     let submissionIsReal = true;
+
+    const firebaseStatus = document.getElementById("firebaseStatus");
+
+    document.getElementById("newQuizBtn").addEventListener("click", startNewQuiz);
+    document.getElementById("tryAgainBtn").addEventListener("click", startNewQuiz);
+    document.getElementById("realBtn").addEventListener("click", () => chooseAnswer(true));
+    document.getElementById("fakeBtn").addEventListener("click", () => chooseAnswer(false));
+    document.getElementById("markReal").addEventListener("click", () => setSubmissionType(true));
+    document.getElementById("markFake").addEventListener("click", () => setSubmissionType(false));
+    document.getElementById("submitForm").addEventListener("submit", submitIdiom);
 
     function shuffle(array) {
       const copy = [...array];
@@ -524,6 +573,52 @@
       }
 
       return copy;
+    }
+
+    async function loadIdiomsFromFirebase() {
+      try {
+        firebaseStatus.textContent = "Connecting to global idiom database...";
+
+        const snapshot = await getDocs(collection(db, "idioms"));
+
+        submittedIdioms = [];
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+
+          if (
+            typeof data.phrase === "string" &&
+            typeof data.meaning === "string" &&
+            typeof data.real === "boolean"
+          ) {
+            submittedIdioms.push({
+              phrase: data.phrase,
+              meaning: data.meaning,
+              real: data.real,
+              userSubmitted: true
+            });
+          }
+        });
+
+        pool = [...submittedIdioms, ...starterIdioms];
+
+        firebaseStatus.textContent =
+          `Global database loaded: ${submittedIdioms.length} submitted idiom${submittedIdioms.length === 1 ? "" : "s"}.`;
+
+        renderSubmitted();
+        startNewQuiz();
+      } catch (error) {
+        console.error("Firebase loading error:", error);
+
+        firebaseStatus.innerHTML =
+          '<span class="error">Could not connect to Firebase. Check your config and Firestore rules.</span>';
+
+        submittedIdioms = [];
+        pool = [...starterIdioms];
+
+        renderSubmitted();
+        startNewQuiz();
+      }
     }
 
     function startNewQuiz() {
@@ -537,7 +632,6 @@
       document.getElementById("feedback").classList.add("hidden");
 
       lockSubmissionForm();
-
       renderQuestion();
     }
 
@@ -560,6 +654,8 @@
 
     function renderQuestion() {
       const q = questions[currentQuestion];
+
+      if (!q) return;
 
       renderProgress();
 
@@ -646,7 +742,7 @@
       document.getElementById("markFake").classList.toggle("selected", !isReal);
     }
 
-    function submitIdiom(event) {
+    async function submitIdiom(event) {
       event.preventDefault();
 
       const phraseInput = document.getElementById("newPhrase");
@@ -655,26 +751,32 @@
       const phrase = phraseInput.value.trim();
       const meaning = meaningInput.value.trim();
 
-      if (!phrase || !meaning) return;
+      if (!phrase || !meaning) {
+        alert("Please enter both the idiom and its meaning.");
+        return;
+      }
 
       const newIdiom = {
         phrase,
         meaning,
         real: submissionIsReal,
-        userSubmitted: true
+        createdAt: serverTimestamp()
       };
 
-      submittedIdioms.unshift(newIdiom);
-      pool.unshift(newIdiom);
+      try {
+        await addDoc(collection(db, "idioms"), newIdiom);
 
-      localStorage.setItem("submittedIdioms", JSON.stringify(submittedIdioms));
+        phraseInput.value = "";
+        meaningInput.value = "";
+        setSubmissionType(true);
 
-      phraseInput.value = "";
-      meaningInput.value = "";
-      setSubmissionType(true);
+        await loadIdiomsFromFirebase();
 
-      renderSubmitted();
-      alert("Idiom added to your local quiz pool. The English language has been notified.");
+        alert("Idiom added to the global quiz pool. The English language has been notified.");
+      } catch (error) {
+        console.error("Firebase submit error:", error);
+        alert("Could not submit idiom. Check your Firebase config and Firestore rules.");
+      }
     }
 
     function renderSubmitted() {
@@ -705,8 +807,8 @@
       });
     }
 
-    function escapeHtml(text) {
-      return text
+    function escapeHtml(value) {
+      return String(value)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
@@ -714,8 +816,7 @@
         .replaceAll("'", "&#039;");
     }
 
-    renderSubmitted();
-    startNewQuiz();
+    loadIdiomsFromFirebase();
   </script>
 </body>
 </html>
